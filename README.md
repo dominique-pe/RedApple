@@ -8,4 +8,4 @@ Add **RedApple** to your project using the [Swift Package Manager](https://swift
 
 1. Open your project in Xcode.
 2. Go to **File > Swift Packages > Add Package Dependency**.
-3. Enter the repository URL: [RedApple Package](https://github.com/dominique-pe/RedApple.git)
+3. Enter the repository URL: [https://github.com/dominique-pe/RedApple.git](https://github.com/dominique-pe/RedApple.git)
