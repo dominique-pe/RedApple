@@ -1,18 +1,11 @@
 # RedApple
-### Swift Package Manager
 
-The [Swift Package Manager](https://swift.org/package-manager/) is a tool for automating the distribution of Swift code and is integrated into the `swift` compiler.
+**RedApple** is a Swift package that simplifies the integration of web services in iOS applications. It allows for easy HTTP requests, response handling, and consuming RESTful APIs.
 
-Once you have your Swift package set up, adding RedApple as a dependency is as easy as adding it to the `dependencies` value of your `Package.swift` or the Package list in Xcode.
+## Installation
 
-```swift
-dependencies: [
-    .package(url: "https://github.com/dominique-pe/RedApple.git", .upToNextMajor(from: "1.0.0"))
-]
-```
+Add **RedApple** to your project using the [Swift Package Manager](https://swift.org/package-manager/):
 
-Normally you'll want to depend on the `RedApple` target:
-
-```swift
-.product(name: "RedApple", package: "RedApple")
-```
+1. Open your project in Xcode.
+2. Go to **File > Swift Packages > Add Package Dependency**.
+3. Enter the repository URL: [RedApple Package](https://github.com/dominique-pe/RedApple.git)
