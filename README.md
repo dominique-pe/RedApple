@@ -18,22 +18,21 @@ To make web requests, import **RedApple** and use the provided methods.
 
 ```swift
 import RedApple
+```
 
-// Define the endpoint URL
-let endpoint = "https://api.example.com/v1/data"
+```swift
+private func callService() async {
 
-// Define the parameters for the request
-let parameters: [String: Any] = ["key": "value"]
+    // Define the endpoint URL and define the parameters for the request
+    let urlString  = "https://ws.dominique.pe/v1/list/books"
+    let parameters : [String: Any] = ["user": "example", "password": "password1234"]
+        
+    do {
+        let responseData = try await self.redApple.request(urlString, withMethod: .get)
+        print("Another \(responseData)")
 
-// Perform a GET request
-APIService.shared.get(url: endpoint, parameters: parameters) { result in
-    switch result {
-    case .success(let response):
-        // Handle the successful response
-        print("Data: \(response)")
-    case .failure(let error):
-        // Handle the error
-        print("Error: \(error.localizedDescription)")
-    }
+    } catch let error as RedAppleError {
+            self.showAlert(error.message)
+    } catch { print("Unexpected error: \(error.localizedDescription)") }
 }
 ```
