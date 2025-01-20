@@ -104,9 +104,9 @@ extension RedApple {
 }
 
 public struct RedAppleError: Decodable, Error {
-    var code    : Int
-    var message : String
-    var detail  : String
+    public var code    : Int
+    public var message : String
+    public var detail  : String
     
     static func invalidURL(_ urlString: String) -> RedAppleError {
         return RedAppleError(code: 400, message: "Invalid URL", detail: urlString)
