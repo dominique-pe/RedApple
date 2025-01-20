@@ -84,8 +84,8 @@ extension RedApple {
     
     private func handleErrorResponse(_ data: Data) async throws -> RedAppleError {
         let error = try? JSONDecoder().decode(RedAppleError.self, from: data)
-        return RedAppleError(code: error?.code ?? 500,
-                             message: error?.message ?? configuration.genericErrorMessage,
+        return RedAppleError(message: error?.message ?? configuration.genericErrorMessage,
+                             code: error?.code ?? 500,
                              detail: error?.detail ?? "No details available.")
     }
     
@@ -105,15 +105,15 @@ extension RedApple {
 }
 
 public struct RedAppleError: Decodable, Error {
-    public var code    : Int
     public var message : String
+    public var code    : Int
     public var detail  : String
     
     static func invalidURL(_ urlString: String) -> RedAppleError {
-        return RedAppleError(code: 400, message: "Invalid URL", detail: urlString)
+        return RedAppleError(message: "Invalid URL", code: 400, detail: urlString)
     }
     
     static func requestFailed(_ message: String) -> RedAppleError {
-        return RedAppleError(code: 500, message: message, detail: "An unexpected error occurred.")
+        return RedAppleError(message: message, code: 500, detail: "An unexpected error occurred.")
     }
 }
