@@ -7,7 +7,7 @@
 Add **RedApple** to your project using the [Swift Package Manager](https://swift.org/package-manager/):
 
 1. Open your project in Xcode.
-2. Go to **File > Swift Packages > Add Package Dependency**.
+2. Go to **File > Add Package Dependency**.
 3. Enter the repository URL: [https://github.com/dominique-pe/RedApple.git](https://github.com/dominique-pe/RedApple.git)
 
 ## Usage
@@ -16,10 +16,12 @@ To make web requests, import **RedApple** and use the provided methods.
 
 ### Example Usage
 
+
 ```swift
 import RedApple
 ```
 
+RedApple Initialization and calls the callService() function when the view is loaded to initiate the network request.
 ```swift
 lazy private var redApple = RedApple()
 
@@ -29,6 +31,7 @@ override func viewDidLoad() {
 }
 ```
 
+Asynchronously makes a network request using RedApple and handles the response or error on the main thread.
 ```swift
 private func callService() {
     Task {
@@ -47,7 +50,7 @@ private func callService() {
         } catch { print(error.localizedDescription) }
     }
 }
-    
+
 private func handleSuccessResponse(_ data: Data) {
     let user = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
     print("User's fullname: \(user?["firstname"] ?? "") \(user?["lastname"] ?? "")")
