@@ -21,34 +21,43 @@ import RedApple
 ```
 
 ```swift
-    private func callService() {
-        Task {
-            do {
-                
-                let urlString   = "https://ws.dominique.pe/v1/user/auth"
-                let params      : [String : Any] = ["username": "someUser", "password": "myPassword123"]
-                let response    = try await redApple.request(urlString, method: .post, parameters: params)
-                
-                DispatchQueue.main.async { self.handleSuccessResponse(response) }
+lazy private var redApple = RedApple()
 
-            } catch let error as RedAppleError {
+override func viewDidLoad() {
+    super.viewDidLoad()
+    self.callService()
+}
+```
+
+```swift
+private func callService() {
+    Task {
+        do {
+            
+            let urlString   = "https://ws.dominique.pe/v1/user/auth"
+            let params      : [String : Any] = ["username": "someUser", "password": "myPassword123"]
+            let response    = try await redApple.request(urlString, method: .post, parameters: params)
                 
-                DispatchQueue.main.async { self.handleError(error) }
+            DispatchQueue.main.async { self.handleSuccessResponse(response) }
+
+        } catch let error as RedAppleError {
                 
-            } catch { print(error.localizedDescription) }
-        }
+            DispatchQueue.main.async { self.handleError(error) }
+                
+        } catch { print(error.localizedDescription) }
     }
+}
     
-    private func handleSuccessResponse(_ data: Data) {
-        let user = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-        print("User's fullname: \(user?["firstname"] ?? "") \(user?["lastname"] ?? "")")
-    }
+private func handleSuccessResponse(_ data: Data) {
+    let user = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+    print("User's fullname: \(user?["firstname"] ?? "") \(user?["lastname"] ?? "")")
+}
     
-    private func handleError(_ error: RedAppleError) {
-        let errorJSON = try? JSONSerialization.jsonObject(with: error.data, options: []) as? [String: Any]
+private func handleError(_ error: RedAppleError) {
+    let errorJSON = try? JSONSerialization.jsonObject(with: error.data, options: []) as? [String: Any]
         
-        let alertController = UIAlertController(title: "RedApple", message: errorJSON?["message"] as? String ?? "", preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: "Close", style: .default, handler: nil))
-        self.present(alertController, animated: true, completion: nil)
-    }
+    let alertController = UIAlertController(title: "RedApple", message: errorJSON?["message"] as? String ?? "", preferredStyle: .alert)
+    alertController.addAction(UIAlertAction(title: "Close", style: .default, handler: nil))
+    self.present(alertController, animated: true, completion: nil)
+}
 ```
