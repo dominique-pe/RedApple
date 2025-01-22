@@ -12,7 +12,6 @@ You can integrate **RedApple** into your Xcode project using the [Swift Package 
 2. Navigate to **File > Add Package Dependency**.
 3. Enter the repository URL:  
    [https://github.com/dominique-pe/RedApple.git](https://github.com/dominique-pe/RedApple.git)
-4. Choose the desired version and complete the integration.
 
 ## **Usage**
 
