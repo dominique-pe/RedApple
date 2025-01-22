@@ -20,8 +20,8 @@ To make web requests, import **RedApple** and use the provided methods.
 ```swift
 import RedApple
 ```
-
 RedApple Initialization and calls the callService() function when the view is loaded to initiate the network request.
+
 ```swift
 lazy private var redApple = RedApple()
 
@@ -30,8 +30,8 @@ override func viewDidLoad() {
     self.callService()
 }
 ```
+RedApple Initialization and calls the callService() function when the view is loaded to initiate the network request.
 
-Asynchronously makes a network request using RedApple and handles the response or error on the main thread.
 ```swift
 private func callService() {
     Task {
@@ -64,3 +64,6 @@ private func handleError(_ error: RedAppleError) {
     self.present(alertController, animated: true, completion: nil)
 }
 ```
+Asynchronously makes a network request using RedApple and handles the response or error on the main thread.
+
+For more documentation on the API, refer to the example at [https://ws.dominique.pe#auth](https://ws.dominique.pe#auth).
