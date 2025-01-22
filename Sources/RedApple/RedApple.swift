@@ -2,7 +2,7 @@
 //  RedApple.swift
 //  RedApple
 //
-//  Created by Dominique Perez on 20/01/25.
+//  Created by Dominique Pérez on 21/01/25.
 //  Copyright © 2025 Dominique All rights reserved.
 //
 
@@ -16,24 +16,6 @@ public enum RedAppleHTTPMethods: String {
     case delete = "DELETE"
 }
 
-public struct RedAppleConfiguration {
-    public var timeoutInterval      : TimeInterval
-    public var genericErrorMessage  : String
-    public var headers              : [String: String]
-    
-    public static var `default`: RedAppleConfiguration {
-        return RedAppleConfiguration(timeoutInterval: 60.0,
-                                     genericErrorMessage: "An unexpected error occurred. Please try again later.",
-                                     headers: ["Accept": "application/json"])
-    }
-    
-    public init(timeoutInterval: TimeInterval, genericErrorMessage: String, headers: [String: String] = [:]) {
-        self.timeoutInterval        = timeoutInterval
-        self.genericErrorMessage    = genericErrorMessage
-        self.headers                = headers
-    }
-}
-
 public struct RedApple {
     
     private let configuration: RedAppleConfiguration
@@ -41,79 +23,93 @@ public struct RedApple {
     public init(configuration: RedAppleConfiguration = .default) {
         self.configuration = configuration
     }
-
-    public func request(_ urlString: String, withMethod method: RedAppleHTTPMethods = .post,
-                        withParams parameters: [String: Any] = [:], withHeaders headers: [String: String] = [:]) async throws -> Data {
+    
+    public func request(_ urlString: String,
+                         method: RedAppleHTTPMethods = .post,
+                         parameters: [String: Any] = [:],
+                         headers: [String: String] = [:]) async throws -> Data {
         
-        guard let url = URL(string: urlString) else {
-            throw RedAppleError.invalidURL(urlString)
+        guard let url = URL(string: urlString), url.scheme?.hasPrefix("http") == true else {
+            throw NSError(domain: "pe.dominique",
+                          code: 0,
+                          userInfo: [NSLocalizedDescriptionKey: "SERVICE: \(urlString) not found"])
         }
 
         var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = method.rawValue
-        urlRequest.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-        
-        headers.forEach { key, value in
-            urlRequest.setValue(value, forHTTPHeaderField: key)
-        }
-        
-        if method != .get, !parameters.isEmpty {
-            urlRequest.httpBody = try JSONSerialization.data(withJSONObject: parameters)
-        }
-
-        urlRequest.timeoutInterval = configuration.timeoutInterval
+        configureRequest(&urlRequest, method: method, parameters: parameters, headers: headers)
         
         do {
+            
             let (data, response) = try await URLSession.shared.data(for: urlRequest)
-
-            guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode) else {
+            
+            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
                 self.printLog(data: data, urlString: urlString)
-                let error = try await self.handleErrorResponse(data)
-                throw error
+                let code = response as? HTTPURLResponse
+                throw RedAppleError(code: code?.statusCode ?? 0, data: data)
             }
-
-            self.printLog(data: data, urlString: urlString)
+            
             return data
-
-        } catch { throw RedAppleError.requestFailed(configuration.genericErrorMessage) }
+        }
     }
 }
 
 extension RedApple {
     
-    private func handleErrorResponse(_ data: Data) async throws -> RedAppleError {
-        let error = try? JSONDecoder().decode(RedAppleError.self, from: data)
-        return RedAppleError(message: error?.message ?? configuration.genericErrorMessage,
-                             code: error?.code ?? 500,
-                             detail: error?.detail ?? "No details available.")
+    private func configureRequest(_ request: inout URLRequest,
+                                  method: RedAppleHTTPMethods,
+                                  parameters: [String: Any],
+                                  headers: [String: String]) {
+      
+        request.httpMethod      = method.rawValue
+        request.timeoutInterval = configuration.timeoutInterval
+        self.configureHeaders(&request, with: headers)
+        
+        if method != .get, !parameters.isEmpty {
+            do { try setRequestBody(&request, with: parameters) } catch { request.httpBody = Data() }
+        }
+    }
+
+    private func configureHeaders(_ request: inout URLRequest, with headers: [String: String]) {
+        var combinedHeaders = configuration.headers
+        headers.forEach { combinedHeaders[$0.key] = $0.value }
+        
+        combinedHeaders.forEach { key, value in
+            request.setValue(value, forHTTPHeaderField: key)
+        }
+    }
+
+    private func setRequestBody(_ request: inout URLRequest, with parameters: [String: Any]) throws {
+        do {
+            let bodyData = try JSONSerialization.data(withJSONObject: parameters, options: .prettyPrinted)
+            request.httpBody = bodyData
+        } catch {
+            let urlString = request.url?.absoluteString
+            throw NSError(domain: "pe.dominique",
+                          code: 0,
+                          userInfo: [NSLocalizedDescriptionKey: "SERVICE: \(urlString ?? "") -> Failed to serialize parameters."])
+        }
     }
     
     private func printLog(data: Data?, urlString: String) {
+        
+        guard RedAppleConfiguration.showConsoleLogs else { return }
+        
         if let data = data {
             if let jsonObject = try? JSONSerialization.jsonObject(with: data, options: .mutableContainers) {
                 if let prettyPrintedData = try? JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted),
                    let prettyPrintedString = String(data: prettyPrintedData, encoding: .utf8) {
-                    print("\n\n***************************************************************")
+                    print("\n***************************************************************")
                     print("SERVICE: \(urlString)")
                     print(prettyPrintedString)
-                    print("***************************************************************\n\n")
-                } else { print("SERVICE: \(urlString) -> JSON formatting failed") }
-            } else { print("SERVICE: \(urlString) -> \(String(data: data, encoding: .utf8) ?? "No response data")") }
-        } else { print("No data received") }
-    }
-}
-
-public struct RedAppleError: Decodable, Error {
-    public var message : String
-    public var code    : Int
-    public var detail  : String
-    
-    static func invalidURL(_ urlString: String) -> RedAppleError {
-        return RedAppleError(message: "Invalid URL", code: 400, detail: urlString)
-    }
-    
-    static func requestFailed(_ message: String) -> RedAppleError {
-        return RedAppleError(message: message, code: 500, detail: "An unexpected error occurred.")
+                    print("***************************************************************\n")
+                } else {
+                    print("SERVICE: \(urlString) -> JSON formatting failed")
+                }
+            } else {
+                print("SERVICE: \(urlString) -> \(String(data: data, encoding: .utf8) ?? "No response data")")
+            }
+        } else {
+            print("No data received from service: \(urlString)")
+        }
     }
 }
