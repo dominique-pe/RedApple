@@ -9,8 +9,9 @@
 import Foundation
 
 public struct RedAppleError: Error, Encodable {
-    let code    : Int
-    let data    : Data
+    
+    public let code : Int
+    public let data : Data
     
     public func toData() -> Data {
         do { return try JSONEncoder().encode(self) } catch { return Data() }
